@@ -85,11 +85,11 @@ def main():
     model = get_model(opt, len(SRC.vocab), len(TRG.vocab))
     
     while True:
-        opt.text =input("Enter a sentence to translate (type 'f' to load from file, or 'q' to quit):\n")
+        opt.text =input("Enter a paragraph to summarize (type 'f' to load from file, or 'q' to quit):\n")
         if opt.text=="q":
             break
         if opt.text=='f':
-            fpath =input("Enter a sentence to translate (type 'f' to load from file, or 'q' to quit):\n")
+            fpath =input("Enter a paragraph to summarize (type 'f' to load from file, or 'q' to quit):\n")
             try:
                 opt.text = ' '.join(open(opt.text, encoding='utf-8').read().split('\n'))
             except:
