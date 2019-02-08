@@ -31,7 +31,7 @@ def multiple_replace(dict, text):
   # For each match, look-up corresponding value in dictionary
   return regex.sub(lambda mo: dict[mo.string[mo.start():mo.end()]], text) 
 
-def translate_sentence(sentence, model, opt, SRC, TRG):
+def summarize_sentence(sentence, model, opt, SRC, TRG):
     
     model.eval()
     indexed = []
@@ -49,14 +49,14 @@ def translate_sentence(sentence, model, opt, SRC, TRG):
 
     return  multiple_replace({' ?' : '?',' !':'!',' .':'.','\' ':'\'',' ,':','}, sentence)
 
-def translate(opt, model, SRC, TRG):
+def summarize(opt, model, SRC, TRG):
     sentences = opt.text.lower().split('.')
-    translated = []
+    summarized = []
 
     for sentence in sentences:
-        translated.append(translate_sentence(sentence + '.', model, opt, SRC, TRG).capitalize())
+        summarized.append(summarize_sentence(sentence + '.', model, opt, SRC, TRG).capitalize())
 
-    return (' '.join(translated))
+    return (' '.join(summarized))
 
 
 def main():
@@ -90,7 +90,7 @@ def main():
     except:
         print("error opening or reading text file")
         return
-    phrase = translate(opt, model, SRC, TRG)
+    phrase = summarize(opt, model, SRC, TRG)
     print('> '+ phrase + '\n')
     
 if __name__ == '__main__':
