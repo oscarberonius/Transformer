@@ -90,7 +90,7 @@ def main():
     except:
         print("error opening or reading text file")
         return
-    phrase = traslate(opt, model, SRC, TRG)
+    phrase = translate(opt, model, SRC, TRG)
     print('> '+ phrase + '\n')
     
 if __name__ == '__main__':
