@@ -67,12 +67,13 @@ def main():
     parser.add_argument('-max_len', type=int, default=80)
     parser.add_argument('-d_model', type=int, default=512)
     parser.add_argument('-n_layers', type=int, default=6)
-    parser.add_argument('-src_lang', required=True)
-    parser.add_argument('-trg_lang', required=True)
+    parser.add_argument('-src_lang', default='en')
+    parser.add_argument('-trg_lang', default='en')
     parser.add_argument('-heads', type=int, default=8)
     parser.add_argument('-dropout', type=int, default=0.1)
     parser.add_argument('-no_cuda', action='store_true')
     parser.add_argument('-floyd', action='store_true')
+    parser.add_argument('-input_path', required=True)
     
     opt = parser.parse_args()
 
@@ -84,19 +85,13 @@ def main():
     SRC, TRG = create_fields(opt)
     model = get_model(opt, len(SRC.vocab), len(TRG.vocab))
     
-    while True:
-        opt.text =input("Enter a paragraph to summarize (type 'f' to load from file, or 'q' to quit):\n")
-        if opt.text=="q":
-            break
-        if opt.text=='f':
-            fpath =input("Enter a paragraph to summarize (type 'f' to load from file, or 'q' to quit):\n")
-            try:
-                opt.text = ' '.join(open(opt.text, encoding='utf-8').read().split('\n'))
-            except:
-                print("error opening or reading text file")
-                continue
-        phrase = translate(opt, model, SRC, TRG)
-        print('> '+ phrase + '\n')
-
+    try:
+        opt.text = ' '.join(open(opt.input_path, encoding='utf-8').read().split('\n'))
+    except:
+        print("error opening or reading text file")
+        return
+    phrase = traslate(opt, model, SRC, TRG)
+    print('> '+ phrase + '\n')
+    
 if __name__ == '__main__':
     main()
