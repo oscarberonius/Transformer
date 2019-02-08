@@ -158,25 +158,7 @@ def promptNextAction(model, opt, SRC, TRG):
             
             print("weights and field pickles saved to " + dst)
 
-        res = yesno(input("train for more epochs? [y/n] : "))
-        if res == 'y':
-            while True:
-                epochs = input("type number of epochs to train for : ")
-                try:
-                    epochs = int(epochs)
-                except:
-                    print("input not a number")
-                    continue
-                if epochs < 1:
-                    print("epochs must be at least 1")
-                    continue
-                else:
-                    break
-            opt.epochs = epochs
-            train_model(model, opt)
-        else:
-            print("exiting program...")
-            break
+        print("exiting program...") 
 
     # for asking about further training use while true loop, and return
 if __name__ == "__main__":
