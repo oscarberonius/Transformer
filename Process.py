@@ -50,8 +50,7 @@ def create_fields(opt):
         
     return(SRC, TRG)
 
-def create_dataset(opt, SRC, TRG): #, validation_cutoff):
-    validation_cutoff = 0.8
+def create_dataset(opt, SRC, TRG, val_cutoff):
     print("creating dataset and iterator... ")
 
     zipped = list(zip([line for line in opt.src_data], [line for line in opt.trg_data]))
@@ -59,7 +58,7 @@ def create_dataset(opt, SRC, TRG): #, validation_cutoff):
     random.shuffle(zipped)
 
     raw_src, raw_trg = zip(*zipped)
-    cutoff = int(len(raw_src)*validation_cutoff)
+    cutoff = int(len(raw_src)*val_cutoff)
 
     raw_train = {'src' : raw_src[0:cutoff], 'trg' : raw_trg[0:cutoff]}
     raw_val = {'src' : raw_src[cutoff::], 'trg' : raw_trg[cutoff::]}

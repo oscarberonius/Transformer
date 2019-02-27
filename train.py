@@ -84,6 +84,7 @@ def main():
     parser.add_argument('-max_strlen', type=int, default=80)
     parser.add_argument('-floyd', action='store_true')
     parser.add_argument('-checkpoint', type=int, default=0)
+    parser.add_argument('-val_cutoff', type=float, default=0.8)
 
     opt = parser.parse_args()
     
@@ -93,7 +94,7 @@ def main():
     
     read_data(opt)
     SRC, TRG = create_fields(opt)
-    opt.train, _ = create_dataset(opt, SRC, TRG)
+    opt.train, _ = create_dataset(opt, SRC, TRG, opt.val_cutoff)
     model = get_model(opt, len(SRC.vocab), len(TRG.vocab))
 
     opt.optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr, betas=(0.9, 0.98), eps=1e-9)
