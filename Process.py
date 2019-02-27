@@ -5,6 +5,7 @@ from Tokenize import tokenize
 from Batch import MyIterator, batch_size_fn
 import os
 import dill as pickle
+import random
 
 def read_data(opt):
     
@@ -49,26 +50,46 @@ def create_fields(opt):
         
     return(SRC, TRG)
 
-def create_dataset(opt, SRC, TRG):
-
+def create_dataset(opt, SRC, TRG): #, validation_cutoff):
+    validation_cutoff = 0.8
     print("creating dataset and iterator... ")
 
-    raw_data = {'src' : [line for line in opt.src_data], 'trg': [line for line in opt.trg_data]}
-    df = pd.DataFrame(raw_data, columns=["src", "trg"])
-    
-    mask = (df['src'].str.count(' ') < opt.max_strlen) & (df['trg'].str.count(' ') < opt.max_strlen)
-    df = df.loc[mask]
+    zipped = list(zip([line for line in opt.src_data], [line for line in opt.trg_data]))
 
-    df.to_csv("translate_transformer_temp.csv", index=False)
-    
+    random.shuffle(zipped)
+
+    raw_src, raw_trg = zip(*zipped)
+    cutoff = int(len(raw_src)*validation_cutoff)
+
+    raw_train = {'src' : raw_src[0:cutoff], 'trg' : raw_trg[0:cutoff]}
+    raw_val = {'src' : raw_src[cutoff::], 'trg' : raw_trg[cutoff::]}
+
+    df_train = pd.DataFrame(raw_train, columns=["src", "trg"])
+    df_val = pd.DataFrame(raw_val, columns=["src", "trg"])
+
+    mask_train = (df_train['src'].str.count(' ') < opt.max_strlen) & (df_train['trg'].str.count(' ') < opt.max_strlen)
+    mask_val = (df_val['src'].str.count(' ') < opt.max_strlen) & (df_val['trg'].str.count(' ') < opt.max_strlen)
+
+    df_train = df_train.loc[mask_train]
+    df_val = df_val.loc[mask_val]
+
+    df_train.to_csv("translate_transformer_train_temp.csv", index=False)
+    df_val.to_csv("translate_transformer_val_temp.csv", index=False)
+
     data_fields = [('src', SRC), ('trg', TRG)]
-    train = data.TabularDataset('./translate_transformer_temp.csv', format='csv', fields=data_fields)
+    train = data.TabularDataset('./translate_transformer_train_temp.csv', format='csv', fields=data_fields)
+    val = data.TabularDataset('./translate_transformer_val_temp.csv', format='csv', fields=data_fields)
 
     train_iter = MyIterator(train, batch_size=opt.batchsize, device=opt.device,
                         repeat=False, sort_key=lambda x: (len(x.src), len(x.trg)),
                         batch_size_fn=batch_size_fn, train=True, shuffle=True)
     
-    os.remove('translate_transformer_temp.csv')
+    val_iter = MyIterator(val, batch_size=opt.batchsize, device=opt.device,
+                        repeat=False, sort_key=lambda x: (len(x.src), len(x.trg)),
+                        batch_size_fn=batch_size_fn, train=True, shuffle=True)
+    
+    os.remove('translate_transformer_train_temp.csv')
+    os.remove('translate_transformer_val_temp.csv')
 
     if opt.load_weights is None:
         SRC.build_vocab(train)
@@ -81,13 +102,49 @@ def create_dataset(opt, SRC, TRG):
                 quit()
             pickle.dump(SRC, open('weights/SRC.pkl', 'wb'))
             pickle.dump(TRG, open('weights/TRG.pkl', 'wb'))
-
+    
     opt.src_pad = SRC.vocab.stoi['<pad>']
     opt.trg_pad = TRG.vocab.stoi['<pad>']
 
     opt.train_len = get_len(train_iter)
+    opt.val_len = get_len(val_iter)
 
-    return train_iter
+
+    # raw_data = {'src' : [line for line in opt.src_data], 'trg': [line for line in opt.trg_data]}
+    # df = pd.DataFrame(raw_data, columns=["src", "trg"])
+    
+    # mask = (df['src'].str.count(' ') < opt.max_strlen) & (df['trg'].str.count(' ') < opt.max_strlen)
+    # df = df.loc[mask]
+
+    # df.to_csv("translate_transformer_temp.csv", index=False)
+    
+    # data_fields = [('src', SRC), ('trg', TRG)]
+    # train = data.TabularDataset('./translate_transformer_temp.csv', format='csv', fields=data_fields)
+
+    # train_iter = MyIterator(train, batch_size=opt.batchsize, device=opt.device,
+    #                     repeat=False, sort_key=lambda x: (len(x.src), len(x.trg)),
+    #                     batch_size_fn=batch_size_fn, train=True, shuffle=True)
+    
+    # os.remove('translate_transformer_temp.csv')
+
+    # if opt.load_weights is None:
+    #     SRC.build_vocab(train)
+    #     TRG.build_vocab(train)
+    #     if opt.checkpoint > 0:
+    #         try:
+    #             os.mkdir("weights")
+    #         except:
+    #             print("weights folder already exists, run program with -load_weights weights to load them")
+    #             quit()
+    #         pickle.dump(SRC, open('weights/SRC.pkl', 'wb'))
+    #         pickle.dump(TRG, open('weights/TRG.pkl', 'wb'))
+
+    # opt.src_pad = SRC.vocab.stoi['<pad>']
+    # opt.trg_pad = TRG.vocab.stoi['<pad>']
+
+    # opt.train_len = get_len(train_iter)
+
+    return train_iter, val_iter
 
 def get_len(train):
 
