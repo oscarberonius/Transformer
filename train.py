@@ -94,7 +94,7 @@ def main():
     
     read_data(opt)
     SRC, TRG = create_fields(opt)
-    opt.train, _ = create_dataset(opt, SRC, TRG, opt.val_cutoff)
+    opt.train, opt.val = create_dataset(opt, SRC, TRG, opt.val_cutoff)
     model = get_model(opt, len(SRC.vocab), len(TRG.vocab))
 
     opt.optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr, betas=(0.9, 0.98), eps=1e-9)
