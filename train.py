@@ -16,12 +16,13 @@ def train_model(model, opt):
     if opt.checkpoint > 0:
         cptime = time.time()
                  
+    train_loss_list = []
+    val_loss_list = []
+    
     for epoch in range(opt.epochs):
 
         train_loss = 0
         val_loss = 0
-        train_loss_list = []
-        val_loss_list = []
         if opt.floyd is False:
             print("   %dm: epoch %d [%s]  %d%%  loss = %s" %\
             ((time.time() - start)//60, epoch + 1, "".join(' '*20), 0, '...'), end='\r')
@@ -39,7 +40,6 @@ def train_model(model, opt):
             ys = trg[:, 1:].contiguous().view(-1)
             opt.optimizer.zero_grad()
             loss = F.cross_entropy(preds.view(-1, preds.size(-1)), ys, ignore_index=opt.trg_pad)
-            train_loss_list.append(loss)
             loss.backward()
             opt.optimizer.step()
             if opt.SGDR == True: 
@@ -61,6 +61,8 @@ def train_model(model, opt):
             if opt.checkpoint > 0 and ((time.time()-cptime)//60) // opt.checkpoint >= 1:
                 torch.save(model.state_dict(), 'weights/model_weights')
                 cptime = time.time()
+
+        train_loss_list.append(avg_loss)
 
         for i, batch in enumerate(opt.val):
             
@@ -88,17 +90,19 @@ def train_model(model, opt):
             if opt.checkpoint > 0 and ((time.time()-cptime)//60) // opt.checkpoint >= 1:
                 torch.save(model.state_dict(), 'weights/model_weights')
                 cptime = time.time()
-   
+
+        val_loss_list.append(avg_val_loss)
+
         print("%dm: epoch %d [%s%s]  %d%%  loss = %.3f\nepoch %d complete, train loss = %.03f, val loss = %.03f" %\
         ((time.time() - start)//60, epoch + 1, "".join('#'*(100//5)), "".join(' '*(20-(100//5))), 100, avg_loss, epoch + 1, avg_loss, avg_val_loss))
 
-        with open('train_loss.pickle', 'wb') as f:
-            pickle.dump(train_loss_list, f, pickle.HIGHEST_PROTOCOL)
+    with open('train_loss.pickle', 'wb') as f:
+        pickle.dump(train_loss_list, f, pickle.HIGHEST_PROTOCOL)
 
-        with open('val_loss.pickle', 'wb') as f:
-            pickle.dump(val_loss_list, f, pickle.HIGHEST_PROTOCOL)
-        
-        print("Losses pickled")
+    with open('val_loss.pickle', 'wb') as f:
+        pickle.dump(val_loss_list, f, pickle.HIGHEST_PROTOCOL)
+    
+    print("Losses pickled")
 
 def main():
 
