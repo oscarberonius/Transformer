@@ -20,6 +20,8 @@ def train_model(model, opt):
 
         train_loss = 0
         val_loss = 0
+        train_loss_list = []
+        val_loss_list = []
         if opt.floyd is False:
             print("   %dm: epoch %d [%s]  %d%%  loss = %s" %\
             ((time.time() - start)//60, epoch + 1, "".join(' '*20), 0, '...'), end='\r')
@@ -37,6 +39,7 @@ def train_model(model, opt):
             ys = trg[:, 1:].contiguous().view(-1)
             opt.optimizer.zero_grad()
             loss = F.cross_entropy(preds.view(-1, preds.size(-1)), ys, ignore_index=opt.trg_pad)
+            train_loss_list.append(loss)
             loss.backward()
             opt.optimizer.step()
             if opt.SGDR == True: 
@@ -67,8 +70,8 @@ def train_model(model, opt):
             src_mask, trg_mask = create_masks(src, trg_input, opt)
             preds = model(src, trg_input, src_mask, trg_mask)
             ys = trg[:, 1:].contiguous().view(-1)
-
-            loss = F.cross_entropy(preds.view(-1, preds.size(-1)), ys, ignore_index=opt.trg_pad)            
+            loss = F.cross_entropy(preds.view(-1, preds.size(-1)), ys, ignore_index=opt.trg_pad)  
+            val_loss_list.append(loss)          
             val_loss += loss.item()
             
             if (i + 1) % opt.printevery == 0:
@@ -88,7 +91,15 @@ def train_model(model, opt):
    
         print("%dm: epoch %d [%s%s]  %d%%  loss = %.3f\nepoch %d complete, train loss = %.03f, val loss = %.03f" %\
         ((time.time() - start)//60, epoch + 1, "".join('#'*(100//5)), "".join(' '*(20-(100//5))), 100, avg_loss, epoch + 1, avg_loss, avg_val_loss))
+
+        with open('train_loss.pickle', 'wb') as f:
+            pickle.dump(train_loss_list, f, pickle.HIGHEST_PROTOCOL)
+
+        with open('val_loss.pickle', 'wb') as f:
+            pickle.dump(val_loss_list, f, pickle.HIGHEST_PROTOCOL)
         
+        print("Losses pickled")
+
 def main():
 
     parser = argparse.ArgumentParser()
