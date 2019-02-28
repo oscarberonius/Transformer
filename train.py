@@ -72,8 +72,7 @@ def train_model(model, opt):
             src_mask, trg_mask = create_masks(src, trg_input, opt)
             preds = model(src, trg_input, src_mask, trg_mask)
             ys = trg[:, 1:].contiguous().view(-1)
-            loss = F.cross_entropy(preds.view(-1, preds.size(-1)), ys, ignore_index=opt.trg_pad)  
-            val_loss_list.append(loss)          
+            loss = F.cross_entropy(preds.view(-1, preds.size(-1)), ys, ignore_index=opt.trg_pad)            
             val_loss += loss.item()
             
             if (i + 1) % opt.printevery == 0:
