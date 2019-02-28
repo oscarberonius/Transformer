@@ -85,13 +85,19 @@ def main():
     SRC, TRG = create_fields(opt)
     model = get_model(opt, len(SRC.vocab), len(TRG.vocab))
     
-    try:
-        opt.text = ' '.join(open(opt.input_path, encoding='utf-8').read().split('\n'))
-    except:
-        print("error opening or reading text file")
-        return
-    phrase = summarize(opt, model, SRC, TRG)
-    print('> '+ phrase + '\n')
-    
+    while True:
+        opt.text =input("Enter a paragraph to summarize (type 'f' to load from file, or 'q' to quit):\n")
+        if opt.text=="q":
+            break
+        if opt.text=='f':
+            fpath =input("Enter a paragraph to summarize (type 'f' to load from file, or 'q' to quit):\n")
+            try:
+                opt.text = ' '.join(open(opt.text, encoding='utf-8').read().split('\n'))
+            except:
+                print("error opening or reading text file")
+                continue
+        phrase = summarize(opt, model, SRC, TRG)
+        print('> '+ phrase + '\n')
+
 if __name__ == '__main__':
     main()
