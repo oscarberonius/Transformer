@@ -86,12 +86,8 @@ def train_model(model, opt):
                 torch.save(model.state_dict(), 'weights/model_weights')
                 cptime = time.time()
    
-   
-        print("%dm: epoch %d [%s%s]  %d%%  loss = %.3f\nepoch %d complete, loss = %.03f" %\
-        ((time.time() - start)//60, epoch + 1, "".join('#'*(100//5)), "".join(' '*(20-(100//5))), 100, avg_loss, epoch + 1, avg_loss))
-
-        print("%dm: epoch %d [%s%s]  %d%%  loss = %.3f\nepoch %d complete, loss = %.03f" %\
-        ((time.time() - start)//60, epoch + 1, "".join('#'*(100//5)), "".join(' '*(20-(100//5))), 100, avg_val_loss, epoch + 1, avg_val_loss))
+        print("%dm: epoch %d [%s%s]  %d%%  loss = %.3f\nepoch %d complete, train loss = %.03f, val loss = %.03f" %\
+        ((time.time() - start)//60, epoch + 1, "".join('#'*(100//5)), "".join(' '*(20-(100//5))), 100, avg_loss, epoch + 1, avg_loss, avg_val_loss))
         
 def main():
 
