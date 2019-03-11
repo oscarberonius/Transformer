@@ -78,18 +78,18 @@ def beam_search(src, model, SRC, TRG, opt):
                 sentence_lengths[i] = vec[1] # Position of first end symbol
 
         num_finished_sentences = len([s for s in sentence_lengths if s > 0])
-
+        
         if num_finished_sentences == opt.k:
             alpha = 0.7
             div = 1/(sentence_lengths.type_as(log_scores)**alpha)
-            _, ind = torch.max(log_scores * div, 1)
+            score, ind = torch.max(log_scores * div, 1)
             ind = ind.data[0]
             break
     
     if ind is None:
         length = (outputs[0]==eos_tok).nonzero()[0]
-        return ' '.join([TRG.vocab.itos[tok] for tok in outputs[0][1:length]])
+        return ' '.join([TRG.vocab.itos[tok] for tok in outputs[0][1:length]]), score[0]
     
     else:
         length = (outputs[ind]==eos_tok).nonzero()[0]
-        return ' '.join([TRG.vocab.itos[tok] for tok in outputs[ind][1:length]])
+        return ' '.join([TRG.vocab.itos[tok] for tok in outputs[ind][1:length]]), score[0]

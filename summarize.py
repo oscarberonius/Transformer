@@ -45,19 +45,14 @@ def summarize_sentence(sentence, model, opt, SRC, TRG):
     if opt.device == 0:
         sentence = sentence.cuda()
     
-    sentence = beam_search(sentence, model, SRC, TRG, opt)
+    sentence, score = beam_search(sentence, model, SRC, TRG, opt)
 
-    return  multiple_replace({' ?' : '?',' !':'!',' .':'.','\' ':'\'',' ,':','}, sentence)
+    return  multiple_replace({' ?' : '?',' !':'!',' .':'.','\' ':'\'',' ,':','}, sentence), score
 
 def summarize(opt, model, SRC, TRG):
-    sentences = opt.text.lower().split('.')
-    summarized = []
-
-    for sentence in sentences:
-        summarized.append(summarize_sentence(sentence + '.', model, opt, SRC, TRG).capitalize())
-
-    return (' '.join(summarized))
-
+    paragraph = opt.text.lower()
+    sen, score = summarize_sentence(paragraph, model, opt, SRC, TRG)
+    return(sen+' '+str(score)+' ')
 
 def main():
     
