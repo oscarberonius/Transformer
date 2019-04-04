@@ -6,6 +6,7 @@ from Batch import MyIterator, batch_size_fn
 import os
 import dill as pickle
 import random
+import json
 
 def read_data(opt):
     
@@ -52,7 +53,6 @@ def create_fields(opt):
 
 def create_dataset(opt, SRC, TRG, val_cutoff):
     print("creating dataset and iterator... ")
-
     zipped = list(zip([line for line in opt.src_data], [line for line in opt.trg_data]))
 
     random.shuffle(zipped)
@@ -63,6 +63,15 @@ def create_dataset(opt, SRC, TRG, val_cutoff):
     raw_train = {'src' : raw_src[0:cutoff], 'trg' : raw_trg[0:cutoff]}
     raw_val = {'src' : raw_src[cutoff::], 'trg' : raw_trg[cutoff::]}
 
+    raw_train = dict(raw_train)
+    raw_val = dict(raw_val)
+
+    with open('raw_train.json', 'w') as f:
+        json.dump(raw_train, f)
+    
+    with open('raw_val.json', 'w') as f:
+        json.dump(raw_val, f)    
+
     df_train = pd.DataFrame(raw_train, columns=["src", "trg"])
     df_val = pd.DataFrame(raw_val, columns=["src", "trg"])
 
@@ -71,6 +80,9 @@ def create_dataset(opt, SRC, TRG, val_cutoff):
 
     df_train = df_train.loc[mask_train]
     df_val = df_val.loc[mask_val]
+
+    print(f'Dps for training set:{df_train.shape[0]}')
+    print(f'Dps for validation set:{df_val.shape[0]}')
 
     df_train.to_csv("translate_transformer_train_temp.csv", index=False)
     df_val.to_csv("translate_transformer_val_temp.csv", index=False)
