@@ -122,7 +122,7 @@ def main():
     parser.add_argument('-lr', type=int, default=0.0001)
     parser.add_argument('-load_weights')
     parser.add_argument('-create_valset', action='store_true')
-    parser.add_argument('-max_strlen', type=int, default=80)
+    parser.add_argument('-max_strlen', type=int, default=150)
     parser.add_argument('-floyd', action='store_true')
     parser.add_argument('-checkpoint', type=int, default=0)
     parser.add_argument('-val_cutoff', type=float, default=0.8)
