@@ -14,6 +14,7 @@ from Beam import beam_search
 from nltk.corpus import wordnet
 from torch.autograd import Variable
 import re
+import pandas as pd
 
 def get_synonym(word, SRC):
     syns = wordnet.synsets(word)
@@ -58,7 +59,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-load_weights', required=True)
     parser.add_argument('-k', type=int, default=3)
-    parser.add_argument('-max_len', type=int, default=80)
+    parser.add_argument('-max_len', type=int, default=150)
     parser.add_argument('-d_model', type=int, default=512)
     parser.add_argument('-n_layers', type=int, default=6)
     parser.add_argument('-src_lang', default='en')
@@ -91,14 +92,13 @@ def main():
                 continue
         phrase, score = summarize(opt, model, SRC, TRG)
         score = score.data.cpu().numpy()
-        print('> '+ phrase + ' '+ str(score) + '\n')
-
+        print('> '+ phrase + " | Score: "+score+'\n')
 def generate_result_data():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-load_weights', required=True)
     parser.add_argument('-k', type=int, default=3)
-    parser.add_argument('-max_len', type=int, default=150)
+    parser.add_argument('-max_len', type=int, default=120)
     parser.add_argument('-d_model', type=int, default=512)
     parser.add_argument('-n_layers', type=int, default=6)
     parser.add_argument('-src_lang', default='en')
@@ -118,51 +118,63 @@ def generate_result_data():
     SRC, TRG = create_fields(opt)
     model = get_model(opt, len(SRC.vocab), len(TRG.vocab))
 
-    with open('raw_train.json', 'rb') as f:
-        raw_train = json.load(f)
-
-    with open('raw_val.json', 'rb') as f:
-        raw_val = json.load(f)
+    #with open('raw_train_420kdps_gd.json', 'rb') as f:
+    #    raw_train = json.load(f)
     
+    with open('raw/raw_val.json', 'rb') as f:
+        raw_val = json.load(f)
+
+    #df_train = pd.DataFrame(raw_train, columns=["src", "trg"])
+    df_val = pd.DataFrame(raw_val, columns=["src", "trg"])
+    
+    #mask_train = (df_train['src'].str.count(' ') < opt.max_len) & (df_train['trg'].str.count(' ') < opt.max_len)
+    mask_val = (df_val['src'].str.count(' ') < opt.max_len) & (df_val['trg'].str.count(' ') < opt.max_len)
+
+    #df_train = df_train.loc[mask_train]
+    df_val = df_val.loc[mask_val]
     # Calculate score from 10000 dps of both training and validation sets. Save to files for later plotting.
     # Save file should be a dict from which it is possible to extract some n top and bottom scores and their corresponding outputs.
-    count = 0
-    train_results = []
-    for dp in raw_train:
-        src_dp = dp['src']
-        trg_dp = dp['trg']
-        opt.text = src_dp
+    #count = 0
+    #train_results = []
+    #for dp in df_train.itertuples():
+    #    src_dp = dp.src
 
-        phrase, score = summarize(opt, model, SRC, TRG)        
-        result = {'src':src_dp,'trg':trg_dp,'output':phrase,'score':score }
-        train_results.append(result)
+    #    phrase, score = summarize(opt, model, SRC, TRG)        
+    #    result = {'src':src_dp,'trg':trg_dp,'output':phrase,'score':score.item() }
+    #    train_results.append(result)
 
-        count +=1
-        if count > 10000:
-            break
+    #    count +=1
+    #    if count%100==0:
+    #        print(f'Processed datapoints: {count}')
+    #    if count >= 2000:
+    #        print('Training set tested.')
+    #        break
     
     count = 0
     val_results = []
-    for dp in raw_val:
-        src_dp = dp['src']
-        trg_dp = dp['trg']
+    for dp in df_val.itertuples():
+        src_dp = dp.src
+        trg_dp = dp.trg
         opt.text = src_dp
 
         phrase, score = summarize(opt, model, SRC, TRG)
-        result = {'src':src_dp,'trg':trg_dp,'output':phrase,'score':score }
+        result = {'src':src_dp,'trg':trg_dp,'output':phrase,'score':score.item()}
         val_results.append(result)
 
         count +=1
-        if count > 10000:
+        if count%100==0:
+            print(f'Processed datapoints: {count}')
+        if count >= 2000:
+            print('Validation set tested.')
             break
     
-    with open('train_results.json', 'wb') as f:
-        json.dump(f, train_results)
+    #with open('train_results_420kdps_gd.json', 'w') as f:
+    #    json.dump(train_results, f)
     
-    with open('val_results.json', 'wb') as f:
-        json.dump(f, val_results)
+    with open('val_results.json', 'w') as f:
+        json.dump(val_results, f)
     print('Result data generated')
 
 if __name__ == '__main__':
-    main()
-    #generate_result_data()
+    #main()
+    generate_result_data()
