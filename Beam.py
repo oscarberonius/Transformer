@@ -87,9 +87,10 @@ def beam_search(src, model, SRC, TRG, opt):
             break
     
     if ind is None:
+        outputs[0][-1] = eos_tok
         length = (outputs[0]==eos_tok).nonzero()[0]
-        return ' '.join([TRG.vocab.itos[tok] for tok in outputs[0][1:length]]), score[0]
+        return ' '.join([TRG.vocab.itos[tok] for tok in outputs[0][1:length]]), -100
     
     else:
         length = (outputs[ind]==eos_tok).nonzero()[0]
-        return ' '.join([TRG.vocab.itos[tok] for tok in outputs[ind][1:length]]), score[0]
+        return ' '.join([TRG.vocab.itos[tok] for tok in outputs[ind][1:length]]), score[0].item()
