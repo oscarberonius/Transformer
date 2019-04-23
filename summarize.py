@@ -91,14 +91,14 @@ def main():
                 print("error opening or reading text file")
                 continue
         phrase, score = summarize(opt, model, SRC, TRG)
-        score = score.data.cpu().numpy()
+        #score = score.data.cpu().numpy()
         print('> '+ phrase + " | Score: "+score+'\n')
 def generate_result_data():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-load_weights', required=True)
     parser.add_argument('-k', type=int, default=3)
-    parser.add_argument('-max_len', type=int, default=120)
+    parser.add_argument('-max_len', type=int, default=700)
     parser.add_argument('-d_model', type=int, default=512)
     parser.add_argument('-n_layers', type=int, default=6)
     parser.add_argument('-src_lang', default='en')
@@ -107,6 +107,7 @@ def generate_result_data():
     parser.add_argument('-dropout', type=int, default=0.1)
     parser.add_argument('-no_cuda', action='store_true')
     parser.add_argument('-floyd', action='store_true')
+    parser.add_argument('-raw_val', default='raw/raw_val.json')
 
     opt = parser.parse_args()
 
@@ -121,7 +122,7 @@ def generate_result_data():
     #with open('raw_train_420kdps_gd.json', 'rb') as f:
     #    raw_train = json.load(f)
     
-    with open('raw/raw_val.json', 'rb') as f:
+    with open(opt.raw_val, 'rb') as f:
         raw_val = json.load(f)
 
     #df_train = pd.DataFrame(raw_train, columns=["src", "trg"])
@@ -158,7 +159,7 @@ def generate_result_data():
         opt.text = src_dp
 
         phrase, score = summarize(opt, model, SRC, TRG)
-        result = {'src':src_dp,'trg':trg_dp,'output':phrase,'score':score.item()}
+        result = {'src':src_dp,'trg':trg_dp,'output':phrase,'score':score}
         val_results.append(result)
 
         count +=1
@@ -171,9 +172,10 @@ def generate_result_data():
     #with open('train_results_420kdps_gd.json', 'w') as f:
     #    json.dump(train_results, f)
     
-    with open('val_results.json', 'w') as f:
+    val_res_file = opt.raw_val[0:-5]+'_results.json'
+    with open(val_res_file, 'w') as f:
         json.dump(val_results, f)
-    print('Result data generated')
+    print(f'Result data generated at {val_res_file}')
 
 if __name__ == '__main__':
     #main()
